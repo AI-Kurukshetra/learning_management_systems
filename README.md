@@ -1,28 +1,62 @@
-﻿# EduFlow
+# EduFlow
 
-EduFlow is a responsive Learning Management System built inside the existing Next.js 14 App Router project. It demonstrates a complete LMS workflow for both teachers and students using TypeScript, Tailwind CSS, Supabase, and Server Actions.
+EduFlow is a role-based Learning Management System built with Next.js 14 App Router, TypeScript, Tailwind CSS, and Supabase. The project now includes admin, teacher, and student workspaces with course management, lesson delivery, discussions, scheduling, messaging, attendance, quizzes, notifications, and file sharing.
 
-## What the LMS does
+## Core stack
 
-### Teacher workflow
-- Create courses from the dashboard or courses page.
-- Enroll students by name from an individual course page.
-- Publish assignments with title, description, and due date.
-- Review submissions on each assignment page.
-- Grade submissions with numeric scores and written feedback.
-- Use the optional `Generate AI feedback` action to insert a suggested feedback draft.
+- Next.js 14 App Router
+- TypeScript
+- Tailwind CSS
+- Supabase Auth
+- Supabase PostgreSQL
+- Supabase Storage
+- Server Actions
 
-### Student workflow
-- Open the student dashboard to view enrolled courses.
-- Review assignments across all courses.
-- Submit or resubmit written answers.
-- Track grades and feedback from the assignment page or gradebook.
+## Implemented modules
 
-## Supabase SQL
+### Admin
+- Dashboard
+- Teachers management
+- Students management
+- Courses management
+- Course builder with templates and module ordering
+- Enrollments management
+- Analytics overview
+- Attendance reports
+- Internal messaging
 
-Run [supabase/eduflow-schema.sql](./supabase/eduflow-schema.sql) in the Supabase SQL editor before opening the dashboard.
+### Teacher
+- Dashboard
+- Courses and lesson workflow
+- Course forum
+- Course grading
+- Calendar and scheduling
+- Attendance management
+- Quiz builder
+- File uploads and resource management
+- Internal messaging
 
-The app expects these environment variables:
+### Student
+- Dashboard
+- Courses and lesson workflow
+- Course forum
+- Course grades/comments
+- Calendar view
+- Quiz participation with auto-scoring
+- Resource downloads and submission uploads
+- Internal messaging
+
+## Shared systems
+
+- Role-based authentication and middleware access control
+- Notification bell in the dashboard header
+- Internal messaging between admin, teacher, and student roles
+- Attendance tracking with present, absent, and late states
+- Quiz creation, question management, submission, and scoring
+- Supabase Storage-backed file uploads with `course-files` bucket
+- Course resources and submission file handling
+
+## Required environment variables
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
@@ -32,52 +66,92 @@ SUPABASE_ANON_KEY=your-public-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-## Folder structure
+## Database setup
 
-```text
-app
-  dashboard/page.tsx
-  courses/page.tsx
-  courses/[courseId]/page.tsx
-  assignments/page.tsx
-  assignments/[assignmentId]/page.tsx
-  gradebook/page.tsx
-  layout.tsx
-  page.tsx
-components
-  AppShell.tsx
-  Sidebar.tsx
-  Header.tsx
-  CourseCard.tsx
-  AssignmentCard.tsx
-  CreateCourseModal.tsx
-  CreateAssignmentModal.tsx
-  StudentList.tsx
-  SubmissionForm.tsx
-  GradeTable.tsx
-lib
-  supabase.ts
-  dbActions.ts
-  types.ts
-supabase
-  eduflow-schema.sql
+Run [supabase/eduflow-schema.sql](./supabase/eduflow-schema.sql) in the Supabase SQL Editor.
+
+That migration now provisions:
+- auth-linked `users`
+- courses and enrollments
+- assignments and submissions
+- course modules, lesson tasks, course grades, and course forum messages
+- calendar events
+- messages
+- notifications
+- attendance
+- quizzes, questions, and quiz submissions
+- files
+- Supabase Storage bucket registration for `course-files`
+
+## Demo users
+
+After the schema is applied, run:
+
+```powershell
+node scripts\seed-demo-users.mjs
 ```
 
-## How it works
+Demo credentials:
+- `admin@eduflow.dev` / `Admin@12345`
+- `teacher@eduflow.dev` / `Teacher@12345`
+- `student@eduflow.dev` / `Student@12345`
 
-1. Visit `/` and choose `Teacher workspace` or `Student workspace`.
-2. The first dashboard load auto-seeds a demo teacher and a few students if the `users` table is empty.
-3. Teachers can create a course, open it, enroll students, and publish assignments.
-4. Students open the assignment detail page to submit written responses.
-5. Teachers grade from the assignment detail page and can generate suggested feedback.
+## Important routes
 
-## Deployment on Vercel
+### Public
+- `/`
+- `/login`
 
-1. Push this project to GitHub, GitLab, or Bitbucket.
-2. Import the repository into Vercel.
-3. Add the Supabase environment variables in the Vercel project settings.
-4. Deploy the project.
-5. After deploy, run the SQL schema in the target Supabase project if you have not done it already.
+### Admin
+- `/admin/dashboard`
+- `/admin/teachers`
+- `/admin/students`
+- `/admin/courses`
+- `/admin/courses/[courseId]`
+- `/admin/enrollments`
+- `/admin/analytics`
+- `/admin/attendance`
+- `/admin/messages`
+
+### Teacher
+- `/teacher/dashboard`
+- `/teacher/courses`
+- `/teacher/courses/[courseId]`
+- `/teacher/calendar`
+- `/teacher/attendance`
+- `/teacher/quizzes`
+- `/teacher/files`
+- `/teacher/messages`
+
+### Student
+- `/student/dashboard`
+- `/student/courses`
+- `/student/courses/[courseId]`
+- `/student/calendar`
+- `/student/quizzes`
+- `/student/resources`
+- `/student/messages`
+
+## New backend action files
+
+- [lib/calendar-actions.ts](./lib/calendar-actions.ts)
+- [lib/messaging-actions.ts](./lib/messaging-actions.ts)
+- [lib/attendance-actions.ts](./lib/attendance-actions.ts)
+- [lib/quiz-actions.ts](./lib/quiz-actions.ts)
+- [lib/notification-actions.ts](./lib/notification-actions.ts)
+- [lib/file-actions.ts](./lib/file-actions.ts)
+- [lib/lms-common.ts](./lib/lms-common.ts)
+
+## New shared UI components
+
+- [components/CalendarView.tsx](./components/CalendarView.tsx)
+- [components/MessagingPanel.tsx](./components/MessagingPanel.tsx)
+- [components/AttendanceTable.tsx](./components/AttendanceTable.tsx)
+- [components/QuizBuilder.tsx](./components/QuizBuilder.tsx)
+- [components/NotificationBell.tsx](./components/NotificationBell.tsx)
+- [components/FileUploader.tsx](./components/FileUploader.tsx)
+- [components/FileList.tsx](./components/FileList.tsx)
+- [components/ResourceRepository.tsx](./components/ResourceRepository.tsx)
 
 ## Local development
 
@@ -86,5 +160,16 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` and switch between `teacher` and `student` views from the dashboard header.
+## Verification
 
+The current codebase has been verified with:
+
+```bash
+npm run build
+```
+
+## Notes
+
+- The app uses server-side role checks for all sensitive actions.
+- The notification bell stays empty until the schema migration runs and notification-producing actions are triggered.
+- File uploads depend on Supabase Storage being available for the configured project.

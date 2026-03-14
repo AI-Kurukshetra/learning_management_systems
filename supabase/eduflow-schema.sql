@@ -174,3 +174,116 @@ create trigger trg_course_grades_updated_at
 before update on public.course_grades
 for each row
 execute function public.set_course_grade_updated_at();
+create table if not exists public.calendar_events (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses(id) on delete cascade,
+  created_by uuid references public.users(id) on delete set null,
+  event_type text not null,
+  title text not null,
+  description text not null default '',
+  scheduled_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  constraint calendar_events_type_check check (event_type in ('assignment', 'event', 'exam'))
+);
+
+create table if not exists public.messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid not null references public.users(id) on delete cascade,
+  recipient_id uuid not null references public.users(id) on delete cascade,
+  subject text not null default '',
+  body text not null,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  type text not null,
+  title text not null,
+  body text not null default '',
+  link text,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now(),
+  constraint notifications_type_check check (type in ('assignment_created', 'assignment_graded', 'new_message', 'course_enrollment'))
+);
+
+create table if not exists public.attendance (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses(id) on delete cascade,
+  student_id uuid not null references public.users(id) on delete cascade,
+  session_date date not null,
+  status text not null,
+  marked_by uuid references public.users(id) on delete set null,
+  notes text,
+  created_at timestamptz not null default now(),
+  constraint attendance_status_check check (status in ('present', 'absent', 'late')),
+  unique (course_id, student_id, session_date)
+);
+
+create table if not exists public.quizzes (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses(id) on delete cascade,
+  teacher_id uuid not null references public.users(id) on delete cascade,
+  title text not null,
+  description text not null default '',
+  due_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.questions (
+  id uuid primary key default gen_random_uuid(),
+  quiz_id uuid not null references public.quizzes(id) on delete cascade,
+  question_type text not null,
+  prompt text not null,
+  options jsonb not null default '[]'::jsonb,
+  correct_answer text not null,
+  position integer not null,
+  created_at timestamptz not null default now(),
+  constraint questions_type_check check (question_type in ('multiple_choice', 'short_answer', 'true_false')),
+  constraint questions_position_check check (position >= 0)
+);
+
+create table if not exists public.quiz_submissions (
+  id uuid primary key default gen_random_uuid(),
+  quiz_id uuid not null references public.quizzes(id) on delete cascade,
+  student_id uuid not null references public.users(id) on delete cascade,
+  answers jsonb not null default '{}'::jsonb,
+  score integer not null default 0,
+  submitted_at timestamptz not null default now(),
+  unique (quiz_id, student_id)
+);
+
+create table if not exists public.files (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid references public.courses(id) on delete cascade,
+  assignment_id uuid references public.assignments(id) on delete cascade,
+  uploader_id uuid not null references public.users(id) on delete cascade,
+  file_name text not null,
+  file_url text not null,
+  file_type text not null,
+  category text not null,
+  storage_path text not null default '',
+  created_at timestamptz not null default now(),
+  constraint files_category_check check (category in ('resource', 'assignment_attachment', 'submission'))
+);
+
+alter table public.files
+  add column if not exists storage_path text not null default '';
+
+create index if not exists idx_calendar_events_course_date on public.calendar_events(course_id, scheduled_at);
+create index if not exists idx_messages_sender_recipient on public.messages(sender_id, recipient_id, created_at);
+create index if not exists idx_messages_recipient_is_read on public.messages(recipient_id, is_read);
+create index if not exists idx_notifications_user_created on public.notifications(user_id, created_at);
+create index if not exists idx_attendance_course_date on public.attendance(course_id, session_date);
+create index if not exists idx_attendance_student_id on public.attendance(student_id);
+create index if not exists idx_quizzes_course_id on public.quizzes(course_id);
+create index if not exists idx_questions_quiz_position on public.questions(quiz_id, position);
+create index if not exists idx_quiz_submissions_quiz_id on public.quiz_submissions(quiz_id);
+create index if not exists idx_files_course_category on public.files(course_id, category);
+create index if not exists idx_files_assignment_id on public.files(assignment_id);
+create index if not exists idx_files_uploader_id on public.files(uploader_id);
+
+insert into storage.buckets (id, name, public)
+values ('course-files', 'course-files', true)
+on conflict (id) do nothing;

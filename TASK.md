@@ -41,22 +41,33 @@
 - Redirected legacy assignment routes back to course workspaces.
 - Updated dashboards, course cards, login copy, and admin course screens to reflect the lesson-task workflow.
 - Verified the lesson-task and course-grading changes with `npm run build`.
-
 - Fixed the teacher lesson-task due-date picker with date-only storage.
 - Updated student lesson-task due dates to render in `dd-mm-yyyy` format.
 - Added a shared course discussion forum for teachers and students on every course page.
 - Added `course_messages` schema support and shared forum server actions.
 - Verified the course-forum and due-date changes with `npm run build`.
+- Added LMS calendar scheduling for assignments, events, and exams.
+- Added internal messaging pages and message actions for admin, teacher, and student roles.
+- Added dashboard notification infrastructure and a header notification bell.
+- Added attendance tracking actions, attendance tables, and admin/teacher attendance pages.
+- Added teacher quiz builder and student quiz participation flows.
+- Added Supabase Storage-backed file uploads, file listing, and course resource sections.
+- Added admin analytics, teacher calendar/attendance/quizzes/files/messages, and student calendar/quizzes/resources/messages pages.
+- Integrated resources into the teacher and student course detail pages.
+- Wired enrollment, assignment creation, assignment grading, and new messages into the notification system.
+- Updated the README for the expanded LMS MVP.
+- Verified the expanded LMS MVP changes with `npm run build`.
+
 ## Added In Scope
 
-- Extend admin course management with a visual course builder.
-- Add reusable course builder UI components and drag-and-drop module ordering.
-- Add course templates and curriculum-tag mapping for course modules.
-- Add Supabase schema and CRUD support for `course_modules`.
-- Add template selection during admin course creation.
-- Add teacher lesson task management and lesson completion controls.
-- Remove assignment-first teacher/student workflow in favor of lesson-task delivery.
-- Add due dates for lesson tasks and expose them in the student portal.
-- Add teacher course-level grading and comments per student.
-- Fix the teacher due-date picker for lesson tasks.
-- Add a course-wise forum shared by teachers and students.
+- Add calendar and scheduling for assignments, events, and exams.
+- Add an internal messaging system between admin, teacher, and student roles.
+- Add dashboard notifications for assignments, grading, enrollment, and messages.
+- Add attendance tracking and attendance reports.
+- Add teacher quiz builder and student quiz participation.
+- Add file sharing, course resources, and assignment file uploads using Supabase Storage.
+- Extend the dashboard header with a notification bell.
+- Add admin analytics and attendance pages.
+- Add teacher calendar, attendance, quiz, file, and messaging pages.
+- Add student calendar, quiz, resources, and messaging pages.
+- Update README documentation for the expanded LMS MVP feature set.

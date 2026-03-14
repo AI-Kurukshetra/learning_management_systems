@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { CourseForum } from "@/components/CourseForum";
+import { FileUploader } from "@/components/FileUploader";
+import { FileList } from "@/components/FileList";
 import { StudentList } from "@/components/StudentList";
 import { StudentLessonBoard } from "@/components/student/StudentLessonBoard";
 import {
@@ -9,6 +11,7 @@ import {
 } from "@/lib/auth-errors";
 import { getCourseForumMessages, postCourseMessage } from "@/lib/course-forum-actions";
 import { getCourseById, getCurrentViewer } from "@/lib/dbActions";
+import { getCourseFiles, uploadFile } from "@/lib/file-actions";
 import { getStudentCourseGrade, getStudentCourseModules } from "@/lib/student-course-actions";
 import type { CourseForumMessageItem, CourseModuleItem, CourseStudentGradeItem } from "@/lib/types";
 
@@ -26,6 +29,7 @@ export default async function StudentCourseDetailPage({
     notFound();
   }
 
+  const resourceFiles = await getCourseFiles({ courseId: params.courseId });
   let modules: CourseModuleItem[] = [];
   let courseGrade: CourseStudentGradeItem | null = null;
   let forumMessages: CourseForumMessageItem[] = [];
@@ -68,6 +72,14 @@ export default async function StudentCourseDetailPage({
         ) : (
           <>
             <StudentLessonBoard modules={modules} courseGrade={courseGrade} />
+            <section className="space-y-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">Resources and submissions</p>
+                <h2 className="mt-2 text-2xl font-semibold text-white">Course files</h2>
+              </div>
+              <FileUploader courses={[detail.course]} assignments={detail.assignments} categories={["submission"]} defaultCategory="submission" uploadAction={uploadFile} />
+              <FileList files={resourceFiles} />
+            </section>
             <CourseForum
               courseId={detail.course.id}
               currentUser={viewer.currentUser}

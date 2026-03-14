@@ -1,8 +1,9 @@
-﻿import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { authSchemaMismatchMessage, getAuthenticatedViewer, requireAuthenticatedViewer } from "@/lib/auth";
 import { buildRolePath, getDashboardPath } from "@/lib/roles";
 import { createServiceRoleSupabaseClient, createServerSupabaseClient } from "@/lib/supabase";
+import { createNotifications } from "@/lib/notification-actions";
 import type {
   AppUser,
   AssignmentDetail,
@@ -932,12 +933,21 @@ export async function assignCourseEnrollments(formData: FormData) {
     if (enrollmentError) {
       throw new Error(enrollmentError.message);
     }
+
+    await createNotifications(
+      studentIds.map((studentId) => ({
+        userId: studentId,
+        type: "course_enrollment",
+        title: "New course enrollment",
+        body: "You were added to a course.",
+        link: `/student/courses/${courseId}`,
+      })),
+    );
   }
 
   revalidateProtectedApp();
   redirect(redirectPath);
 }
-
 export async function deleteEnrollment(formData: FormData) {
   "use server";
 
@@ -968,7 +978,7 @@ export async function enrollStudent(formData: FormData) {
   if (viewer.role === "teacher") {
     const { data: course, error: courseError } = await supabase
       .from("courses")
-      .select("id,teacher_id")
+      .select("id,teacher_id,title")
       .eq("id", courseId)
       .maybeSingle();
 
@@ -995,10 +1005,19 @@ export async function enrollStudent(formData: FormData) {
     throw new Error(error.message);
   }
 
+  await createNotifications([
+    {
+      userId: studentId,
+      type: "course_enrollment",
+      title: "New course enrollment",
+      body: "You were enrolled in a course.",
+      link: `/student/courses/${courseId}`,
+    },
+  ]);
+
   revalidateProtectedApp();
   redirect(redirectPath);
 }
-
 export async function createAssignment(formData: FormData) {
   "use server";
 
@@ -1016,7 +1035,7 @@ export async function createAssignment(formData: FormData) {
 
   const { data: course, error: courseError } = await supabase
     .from("courses")
-    .select("id,teacher_id")
+    .select("id,teacher_id,title")
     .eq("id", courseId)
     .maybeSingle();
 
@@ -1039,10 +1058,20 @@ export async function createAssignment(formData: FormData) {
     throw new Error(error.message);
   }
 
+  const { data: enrolledStudents } = await supabase.from("enrollments").select("student_id").eq("course_id", courseId);
+  await createNotifications(
+    ((enrolledStudents ?? []) as Array<{ student_id: string }>).map((row) => ({
+      userId: row.student_id,
+      type: "assignment_created",
+      title: `New assignment in ${course.title}`,
+      body: title,
+      link: `/student/courses/${courseId}`,
+    })),
+  );
+
   revalidateProtectedApp();
   redirect(redirectPath);
 }
-
 export async function submitAssignment(formData: FormData) {
   "use server";
 
@@ -1130,7 +1159,7 @@ export async function gradeSubmission(formData: FormData) {
 
   const { data: course, error: courseError } = await supabase
     .from("courses")
-    .select("id,teacher_id")
+    .select("id,teacher_id,title")
     .eq("id", assignment.course_id)
     .maybeSingle();
 
@@ -1140,6 +1169,16 @@ export async function gradeSubmission(formData: FormData) {
 
   if (!course || course.teacher_id !== viewer.currentUser.id) {
     throw new Error("You can only grade submissions in your own courses.");
+  }
+
+  const { data: submissionRow, error: submissionError } = await supabase
+    .from("submissions")
+    .select("student_id")
+    .eq("id", submissionId)
+    .maybeSingle();
+
+  if (submissionError) {
+    throw new Error(submissionError.message);
   }
 
   const { error } = await supabase
@@ -1154,10 +1193,21 @@ export async function gradeSubmission(formData: FormData) {
     throw new Error(error.message);
   }
 
+  if (submissionRow?.student_id) {
+    await createNotifications([
+      {
+        userId: submissionRow.student_id,
+        type: "assignment_graded",
+        title: "Assignment graded",
+        body: `Your work in ${course.title} has been graded.`,
+        link: `/student/courses/${assignment.course_id}`,
+      },
+    ]);
+  }
+
   revalidateProtectedApp();
   redirect(redirectPath);
 }
-
 export async function generateAiFeedback(formData: FormData) {
   "use server";
 
@@ -1188,7 +1238,7 @@ export async function generateAiFeedback(formData: FormData) {
 
   const { data: course, error: courseError } = await supabase
     .from("courses")
-    .select("id,teacher_id")
+    .select("id,teacher_id,title")
     .eq("id", assignment.course_id)
     .maybeSingle();
 

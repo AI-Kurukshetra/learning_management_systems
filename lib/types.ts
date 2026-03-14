@@ -1,6 +1,11 @@
-﻿export type UserRole = "admin" | "teacher" | "student";
+export type UserRole = "admin" | "teacher" | "student";
 export type CourseModuleType = "lesson" | "video" | "assignment" | "quiz" | "resource";
 export type CurriculumTag = "Math" | "Science" | "History" | "Programming" | "Language";
+export type CalendarEventType = "assignment" | "event" | "exam";
+export type AttendanceStatus = "present" | "absent" | "late";
+export type QuizQuestionType = "multiple_choice" | "short_answer" | "true_false";
+export type NotificationType = "assignment_created" | "assignment_graded" | "new_message" | "course_enrollment";
+export type FileCategory = "resource" | "assignment_attachment" | "submission";
 
 export interface AppUser {
   id: string;
@@ -74,6 +79,137 @@ export interface CourseForumMessageItem {
   senderRole: UserRole;
   body: string;
   createdAt: string;
+}
+
+export interface CalendarEventItem {
+  id: string;
+  courseId: string;
+  courseTitle: string;
+  eventType: CalendarEventType;
+  title: string;
+  description: string;
+  scheduledAt: string;
+  createdById: string | null;
+  createdAt: string;
+}
+
+export interface MessageItem {
+  id: string;
+  senderId: string;
+  recipientId: string;
+  senderName: string;
+  senderEmail: string;
+  recipientName: string;
+  recipientEmail: string;
+  subject: string;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface MessageThreadItem {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userRole: UserRole;
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
+}
+
+export interface NotificationItem {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  link: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface AttendanceRecordItem {
+  id: string;
+  courseId: string;
+  courseTitle: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  sessionDate: string;
+  status: AttendanceStatus;
+  markedById: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface AttendanceSummaryItem {
+  courseId: string;
+  courseTitle: string;
+  present: number;
+  absent: number;
+  late: number;
+  total: number;
+}
+
+export interface QuizQuestionItem {
+  id: string;
+  quizId: string;
+  questionType: QuizQuestionType;
+  prompt: string;
+  options: string[];
+  correctAnswer: string;
+  position: number;
+}
+
+export interface QuizSubmissionItem {
+  id: string;
+  quizId: string;
+  studentId: string;
+  answers: Record<string, string>;
+  score: number;
+  submittedAt: string;
+}
+
+export interface QuizItem {
+  id: string;
+  courseId: string;
+  courseTitle: string;
+  teacherId: string;
+  title: string;
+  description: string;
+  dueAt: string | null;
+  createdAt: string;
+  questionCount: number;
+  questions: QuizQuestionItem[];
+  submission: QuizSubmissionItem | null;
+}
+
+export interface FileItem {
+  id: string;
+  courseId: string | null;
+  courseTitle: string;
+  assignmentId: string | null;
+  uploaderId: string;
+  uploaderName: string;
+  uploaderRole: UserRole;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  category: FileCategory;
+  storagePath: string;
+  createdAt: string;
+}
+
+export interface AnalyticsOverview {
+  teacherCount: number;
+  studentCount: number;
+  courseCount: number;
+  enrollmentCount: number;
+  eventCount: number;
+  quizCount: number;
+  fileCount: number;
+  attendanceCount: number;
+  unreadNotificationCount: number;
 }
 
 export interface SubmissionItem {

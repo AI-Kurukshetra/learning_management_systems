@@ -1,6 +1,8 @@
-﻿import type { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { logout } from "@/lib/dbActions";
+import { getNotifications, markAllNotificationsRead } from "@/lib/notification-actions";
 import type { Viewer } from "@/lib/types";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface HeaderProps {
   title: string;
@@ -9,7 +11,9 @@ interface HeaderProps {
   actions?: ReactNode;
 }
 
-export function Header({ title, description, viewer, actions }: HeaderProps) {
+export async function Header({ title, description, viewer, actions }: HeaderProps) {
+  const notifications = await getNotifications();
+
   return (
     <header className="border-b border-white/10 bg-slate-950/50 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
@@ -30,6 +34,7 @@ export function Header({ title, description, viewer, actions }: HeaderProps) {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <NotificationBell notifications={notifications} action={markAllNotificationsRead} />
           {actions}
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/15 text-sm font-semibold text-cyan-200 ring-1 ring-inset ring-cyan-400/25">

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,6 +17,9 @@ function getNavItems(role: UserRole) {
       { label: "Students", href: "/admin/students" },
       { label: "Courses", href: "/admin/courses" },
       { label: "Enrollments", href: "/admin/enrollments" },
+      { label: "Analytics", href: "/admin/analytics" },
+      { label: "Attendance", href: "/admin/attendance" },
+      { label: "Messages", href: "/admin/messages" },
     ];
   }
 
@@ -24,12 +27,21 @@ function getNavItems(role: UserRole) {
     return [
       { label: "Dashboard", href: "/teacher/dashboard" },
       { label: "Courses", href: "/teacher/courses" },
+      { label: "Calendar", href: "/teacher/calendar" },
+      { label: "Attendance", href: "/teacher/attendance" },
+      { label: "Quizzes", href: "/teacher/quizzes" },
+      { label: "Files", href: "/teacher/files" },
+      { label: "Messages", href: "/teacher/messages" },
     ];
   }
 
   return [
     { label: "Dashboard", href: "/student/dashboard" },
     { label: "Courses", href: "/student/courses" },
+    { label: "Calendar", href: "/student/calendar" },
+    { label: "Quizzes", href: "/student/quizzes" },
+    { label: "Resources", href: "/student/resources" },
+    { label: "Messages", href: "/student/messages" },
   ];
 }
 
@@ -72,10 +84,10 @@ export function Sidebar({ role }: SidebarProps) {
         </p>
         <p className="mt-2 text-sm text-slate-400">
           {role === "admin"
-            ? "Manage teacher, student, course, and enrollment modules from one control panel."
+            ? "Monitor analytics, manage attendance reports, and coordinate the wider LMS operation."
             : role === "teacher"
-              ? "Guide lesson delivery, assign due-dated tasks, and grade each student across the course."
-              : "Track lesson tasks, follow due dates, and review course grades and teacher comments."}
+              ? "Schedule classes, track attendance, build quizzes, share files, and message your learners."
+              : "Follow the calendar, take quizzes, access files, and stay aligned with course communication."}
         </p>
       </div>
     </aside>

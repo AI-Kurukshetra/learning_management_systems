@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { CourseForum } from "@/components/CourseForum";
+import { ResourceRepository } from "@/components/ResourceRepository";
 import { StudentList } from "@/components/StudentList";
 import { TeacherCourseGradesPanel } from "@/components/teacher/TeacherCourseGradesPanel";
 import { TeacherLessonBoard } from "@/components/teacher/TeacherLessonBoard";
@@ -10,6 +11,7 @@ import {
 } from "@/lib/auth-errors";
 import { getCourseForumMessages, postCourseMessage } from "@/lib/course-forum-actions";
 import { getCourseById, getCurrentViewer, getUsersByRole } from "@/lib/dbActions";
+import { getCourseFiles } from "@/lib/file-actions";
 import {
   addLessonTask,
   getTeacherCourseGrades,
@@ -17,7 +19,7 @@ import {
   saveCourseGrade,
   toggleLessonCompletion,
 } from "@/lib/teacher-course-actions";
-import type { CourseForumMessageItem, CourseModuleItem, CourseStudentGradeItem } from "@/lib/types";
+import type { CourseForumMessageItem, CourseModuleItem, CourseStudentGradeItem, FileItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +29,10 @@ export default async function TeacherCourseDetailPage({
   params: { courseId: string };
 }) {
   const viewer = await getCurrentViewer();
-  const [detail, studentOptions] = await Promise.all([
+  const [detail, studentOptions, resourceFiles] = await Promise.all([
     getCourseById(params.courseId, viewer),
     getUsersByRole("student"),
+    getCourseFiles({ courseId: params.courseId, category: "resource" }),
   ]);
 
   if (!detail) {
@@ -83,6 +86,7 @@ export default async function TeacherCourseDetailPage({
               addTaskAction={addLessonTask}
               toggleLessonCompletionAction={toggleLessonCompletion}
             />
+            <ResourceRepository files={resourceFiles} courses={[detail.course]} assignments={detail.assignments} categories={["resource", "assignment_attachment"]} defaultCategory="resource" canManage />
             <CourseForum
               courseId={detail.course.id}
               currentUser={viewer.currentUser}
