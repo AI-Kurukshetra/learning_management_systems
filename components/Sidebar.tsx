@@ -15,6 +15,7 @@ function getNavItems(role: UserRole) {
       { label: "Dashboard", href: "/admin/dashboard" },
       { label: "Teachers", href: "/admin/teachers" },
       { label: "Students", href: "/admin/students" },
+      { label: "Parents", href: "/admin/parents" },
       { label: "Courses", href: "/admin/courses" },
       { label: "Enrollments", href: "/admin/enrollments" },
       { label: "Analytics", href: "/admin/analytics" },
@@ -32,6 +33,17 @@ function getNavItems(role: UserRole) {
       { label: "Quizzes", href: "/teacher/quizzes" },
       { label: "Files", href: "/teacher/files" },
       { label: "Messages", href: "/teacher/messages" },
+    ];
+  }
+
+  if (role === "parent") {
+    return [
+      { label: "Dashboard", href: "/parent/dashboard" },
+      { label: "Child", href: "/parent/children" },
+      { label: "Courses", href: "/parent/courses" },
+      { label: "Grades", href: "/parent/grades" },
+      { label: "Attendance", href: "/parent/attendance" },
+      { label: "Messages", href: "/parent/messages" },
     ];
   }
 
@@ -80,14 +92,22 @@ export function Sidebar({ role }: SidebarProps) {
 
       <div className="mt-6 hidden rounded-3xl border border-white/10 bg-white/5 p-4 md:block">
         <p className="text-sm font-medium text-white">
-          {role === "admin" ? "Administration" : role === "teacher" ? "Teaching workflow" : "Learning workflow"}
+          {role === "admin"
+            ? "Administration"
+            : role === "teacher"
+              ? "Teaching workflow"
+              : role === "parent"
+                ? "Parent portal"
+                : "Learning workflow"}
         </p>
         <p className="mt-2 text-sm text-slate-400">
           {role === "admin"
-            ? "Monitor analytics, manage attendance reports, and coordinate the wider LMS operation."
+            ? "Monitor analytics, manage parents, teachers, students, and coordinate the wider LMS operation."
             : role === "teacher"
               ? "Schedule classes, track attendance, build quizzes, share files, and message your learners."
-              : "Follow the calendar, take quizzes, access files, and stay aligned with course communication."}
+              : role === "parent"
+                ? "Track your linked child, monitor grades, review coursework, and message teachers from one place."
+                : "Follow the calendar, take quizzes, access files, and stay aligned with course communication."}
         </p>
       </div>
     </aside>

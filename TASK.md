@@ -58,6 +58,17 @@
 - Updated the README for the expanded LMS MVP.
 - Verified the expanded LMS MVP changes with `npm run build`.
 
+- Added parent role support across auth, middleware, navigation, and dashboard routing.
+- Added an admin Parents module with parent account creation, search, editing, deletion, and parent-student linking.
+- Extended student creation to include an optional parent selector.
+- Added persistent parent-child link storage using Supabase Auth metadata to satisfy the no-schema-change constraint.
+- Added parent-only data helpers that read child courses, assignments, grades, and attendance from existing tables.
+- Added parent dashboard, child details, courses, grades, attendance, and messages pages.
+- Added reusable parent portal UI components for overview, courses, grades, attendance, and teacher messaging.
+- Added placeholder in-memory parent-to-teacher messaging scoped to the linked childÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s teachers.
+- Fixed the users_role_check migration so the database can store parent users.
+- Added a clearer admin error message when the database still rejects the parent role and needs the updated migration.
+- Handled stale Supabase refresh-token errors after deleting and recreating users with the same email.
 ## Added In Scope
 
 - Add calendar and scheduling for assignments, events, and exams.
@@ -71,3 +82,24 @@
 - Add teacher calendar, attendance, quiz, file, and messaging pages.
 - Add student calendar, quiz, resources, and messaging pages.
 - Update README documentation for the expanded LMS MVP feature set.
+- Added parent role support across auth, middleware, navigation, and dashboard routing.
+- Added an admin Parents module with parent account creation, search, editing, deletion, and parent-student linking.
+- Extended student creation to include an optional parent selector.
+- Added persistent parent-child link storage using Supabase Auth metadata to satisfy the no-schema-change constraint.
+- Added parent-only data helpers that read child courses, assignments, grades, and attendance from existing tables.
+- Added parent dashboard, child details, courses, grades, attendance, and messages pages.
+- Added reusable parent portal UI components for overview, courses, grades, attendance, and teacher messaging.
+- Added placeholder in-memory parent-to-teacher messaging scoped to the linked childÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s teachers.
+- Fixed the users_role_check migration so the database can store parent users.
+- Added a clearer admin error message when the database still rejects the parent role and needs the updated migration.
+- Handled stale Supabase refresh-token errors after deleting and recreating users with the same email.
+## Added In Scope
+
+- Parent portal and parent management without database schema changes.
+- Admin parents module with parent creation and parent-to-student linking.
+- Parent-only dashboard, courses, grades, attendance, and messages pages.
+- Persistent parent-child linking in Supabase Auth metadata and placeholder parent-to-teacher messaging because the database tables cannot be changed for this scope.
+
+
+
+

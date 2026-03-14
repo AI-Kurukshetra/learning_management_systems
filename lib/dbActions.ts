@@ -4,6 +4,7 @@ import { authSchemaMismatchMessage, getAuthenticatedViewer, requireAuthenticated
 import { buildRolePath, getDashboardPath } from "@/lib/roles";
 import { createServiceRoleSupabaseClient, createServerSupabaseClient } from "@/lib/supabase";
 import { createNotifications } from "@/lib/notification-actions";
+import { linkParentToStudent, removeParentStudentLinkByStudentId, unlinkParent } from "@/lib/parent-links-store";
 import type {
   AppUser,
   AssignmentDetail,
@@ -67,6 +68,9 @@ function revalidateProtectedApp() {
   revalidatePath("/login");
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin/users");
+  revalidatePath("/admin/teachers");
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/parents");
   revalidatePath("/admin/courses");
   revalidatePath("/admin/enrollments");
   revalidatePath("/teacher/dashboard");
@@ -75,6 +79,12 @@ function revalidateProtectedApp() {
   revalidatePath("/student/dashboard");
   revalidatePath("/student/courses");
   revalidatePath("/student/assignments");
+  revalidatePath("/parent/dashboard");
+  revalidatePath("/parent/children");
+  revalidatePath("/parent/courses");
+  revalidatePath("/parent/grades");
+  revalidatePath("/parent/attendance");
+  revalidatePath("/parent/messages");
 }
 
 function buildAiFeedback(content: string, assignmentTitle: string) {
@@ -237,7 +247,7 @@ export async function getAllUsers() {
   };
 }
 
-export async function getUsersByRole(role: Extract<UserRole, "teacher" | "student">) {
+export async function getUsersByRole(role: Extract<UserRole, "teacher" | "student" | "parent">) {
   const supabase = createServiceRoleSupabaseClient();
   const { data, error } = await supabase
     .from("users")
@@ -624,6 +634,8 @@ export async function login(formData: FormData) {
   const redirectTo = String(formData.get("redirectTo") ?? "").trim();
   const supabase = createServerSupabaseClient();
 
+  await supabase.auth.signOut({ scope: "local" });
+
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -673,11 +685,12 @@ export async function createManagedUser(
     const email = normalizeEmail(assertValue(formData.get("email"), "Email is required."));
     const password = assertValue(formData.get("password"), "Password is required.");
     const role = assertValue(formData.get("role"), "Role is required.");
+    const parentId = String(formData.get("parentId") ?? "").trim();
 
-    if (role !== "teacher" && role !== "student") {
+    if (role !== "teacher" && role !== "student" && role !== "parent") {
       return {
         success: false,
-        error: "Admin can only create teacher or student users from this form.",
+        error: "Admin can only create teacher, student, or parent users from this form.",
         message: null,
       };
     }
@@ -699,6 +712,26 @@ export async function createManagedUser(
         error: "Email already exists.",
         message: null,
       };
+    }
+
+    if (role === "student" && parentId) {
+      const { data: parentProfile, error: parentError } = await supabase
+        .from("users")
+        .select("id,role,auth_user_id")
+        .eq("id", parentId)
+        .maybeSingle();
+
+      if (parentError) {
+        throw new Error(parentError.message);
+      }
+
+      if (!parentProfile || parentProfile.role !== "parent") {
+        return {
+          success: false,
+          error: "Selected parent could not be found.",
+          message: null,
+        };
+      }
     }
 
     const { data: authResult, error: authError } = await supabase.auth.admin.createUser({
@@ -731,23 +764,51 @@ export async function createManagedUser(
       };
     }
 
-    const { error: profileError } = await supabase.from("users").insert({
-      auth_user_id: authUserId,
-      email,
-      name,
-      role,
-    });
+    const { data: createdProfile, error: profileError } = await supabase
+      .from("users")
+      .insert({
+        auth_user_id: authUserId,
+        email,
+        name,
+        role,
+      })
+      .select("id")
+      .single();
 
     if (profileError) {
       await supabase.auth.admin.deleteUser(authUserId);
 
-      const duplicateEmail = profileError.message.toLowerCase().includes("duplicate") || profileError.message.toLowerCase().includes("unique");
+      const normalizedMessage = profileError.message.toLowerCase();
+      const duplicateEmail = normalizedMessage.includes("duplicate") || normalizedMessage.includes("unique");
+      const parentRoleConstraintIssue =
+        role === "parent" &&
+        (normalizedMessage.includes("users_role_check") || normalizedMessage.includes("check constraint"));
 
       return {
         success: false,
-        error: duplicateEmail ? "Email already exists." : profileError.message,
+        error: parentRoleConstraintIssue
+          ? "Database role constraint does not allow parent yet. Run the updated supabase/eduflow-schema.sql migration."
+          : duplicateEmail
+            ? "Email already exists."
+            : profileError.message,
         message: null,
       };
+    }
+
+    if (role === "student" && parentId && createdProfile?.id) {
+      const { data: parentProfileForLink, error: parentProfileForLinkError } = await supabase
+        .from("users")
+        .select("id,auth_user_id,email,name,role,created_at")
+        .eq("id", parentId)
+        .maybeSingle();
+
+      if (parentProfileForLinkError) {
+        throw new Error(parentProfileForLinkError.message);
+      }
+
+      if (parentProfileForLink) {
+        await linkParentToStudent(parentProfileForLink as AppUser, createdProfile.id);
+      }
     }
 
     revalidateProtectedApp();
@@ -755,7 +816,7 @@ export async function createManagedUser(
     return {
       success: true,
       error: null,
-      message: `${role === "teacher" ? "Teacher" : "Student"} created successfully.`,
+      message: `${role.charAt(0).toUpperCase() + role.slice(1)} created successfully.`,
     };
   } catch (error) {
     return {
@@ -775,7 +836,7 @@ export async function updateManagedUser(formData: FormData) {
   const role = assertValue(formData.get("role"), "Role is required.");
   const redirectPath = String(formData.get("redirectPath") ?? "/admin/teachers");
 
-  if (role !== "teacher" && role !== "student" && role !== "admin") {
+  if (role !== "teacher" && role !== "student" && role !== "admin" && role !== "parent") {
     throw new Error("Invalid role.");
   }
 
@@ -805,7 +866,7 @@ export async function deleteManagedUser(formData: FormData) {
   const supabase = createServiceRoleSupabaseClient();
   const { data: user, error: userError } = await supabase
     .from("users")
-    .select("auth_user_id")
+    .select("auth_user_id,role")
     .eq("id", userId)
     .maybeSingle();
 
@@ -817,6 +878,14 @@ export async function deleteManagedUser(formData: FormData) {
 
   if (deleteProfileError) {
     throw new Error(deleteProfileError.message);
+  }
+
+  if (user?.role === "parent") {
+    await unlinkParent({ id: userId, auth_user_id: user.auth_user_id ?? null });
+  }
+
+  if (user?.role === "student") {
+    await removeParentStudentLinkByStudentId(userId);
   }
 
   if (user?.auth_user_id) {
@@ -1264,6 +1333,11 @@ export async function generateAiFeedback(formData: FormData) {
   revalidateProtectedApp();
   redirect(redirectPath);
 }
+
+
+
+
+
 
 
 

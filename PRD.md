@@ -10,6 +10,7 @@ EduFlow is a role-based learning management system built with Next.js and Supaba
 - Admin
 - Teacher
 - Student
+- Parent
 
 ## Goals
 - Provide secure email/password authentication with Supabase Auth.
@@ -18,19 +19,20 @@ EduFlow is a role-based learning management system built with Next.js and Supaba
 - Allow admins to manage teachers, students, courses, enrollments, analytics, and attendance reporting.
 - Allow teachers to manage coursework, scheduling, attendance, quizzes, files, messaging, and grading.
 - Allow students to access learning content, events, quizzes, files, messages, and grades.
+- Allow parents to monitor a linked child's courses, assignments, grades, attendance, and teacher communication without exposing other student data.
 
 ## Feature List
 
 ### Authentication
 - Login page at `/login`
 - Supabase Auth email/password login
-- Cookie-based session storage
+- Cookie-based session storage`r`n- Graceful recovery from stale auth cookies / invalid refresh tokens during login and protected-route checks
 - Logout support
 - Role lookup from `public.users`
 - Post-login dashboard redirect by role
 
 ### Authorization
-- Middleware route protection for `/admin/*`, `/teacher/*`, and `/student/*`
+- Middleware route protection for `/admin/*`, `/teacher/*`, `/student/*`, and `/parent/*`
 - Redirect unauthorized users to their own dashboard
 - Server-side role checks for protected data/actions
 
@@ -59,6 +61,24 @@ EduFlow is a role-based learning management system built with Next.js and Supaba
 - Attendance reporting page
 - Internal messaging access
 
+
+### Parent Module
+- Parent dashboard
+- Child overview with enrolled courses, assignment totals, and average grade
+- Child courses page with teacher visibility
+- Child assignments view sourced from enrolled courses
+- Gradebook view sourced from submissions
+- Mock attendance view derived from assignment submission behavior
+- Parent-to-teacher messaging with placeholder delivery
+- Security boundary so parents only see the child linked to their own account
+
+### Admin Parent Management
+- Parents module in the admin dashboard
+- Create parent accounts
+- Search and manage parent accounts
+- Link a parent to a student during student creation
+- Relink or clear parent-child associations from the admin parents module
+- Parent-child associations kept outside the database because schema changes are explicitly disallowed for this scope
 ### Teacher Module
 - Teacher dashboard
 - View assigned courses
@@ -144,6 +164,14 @@ EduFlow is a role-based learning management system built with Next.js and Supaba
 - `/teacher/files`
 - `/teacher/messages`
 
+### Parent
+- `/parent/dashboard`
+- `/parent/children`
+- `/parent/courses`
+- `/parent/grades`
+- `/parent/attendance`
+- `/parent/messages`
+
 ### Student
 - `/student/dashboard`
 - `/student/courses`
@@ -161,3 +189,6 @@ EduFlow is a role-based learning management system built with Next.js and Supaba
 - Keep admin workflows responsive with disabled submit states during mutations
 - Keep new modules integrated into the existing dashboard shell and navigation
 - Use Supabase Storage for file uploads and persisted file metadata
+
+
+

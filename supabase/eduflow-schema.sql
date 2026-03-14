@@ -34,7 +34,7 @@ alter table public.users
 
 alter table public.users
   add constraint users_role_check
-  check (role in ('admin', 'teacher', 'student'));
+  check (role in ('admin', 'teacher', 'student', 'parent'));
 
 create unique index if not exists idx_users_auth_user_id_unique
   on public.users(auth_user_id)
@@ -287,3 +287,4 @@ create index if not exists idx_files_uploader_id on public.files(uploader_id);
 insert into storage.buckets (id, name, public)
 values ('course-files', 'course-files', true)
 on conflict (id) do nothing;
+

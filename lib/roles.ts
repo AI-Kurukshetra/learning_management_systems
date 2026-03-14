@@ -1,6 +1,6 @@
-﻿import type { UserRole } from "@/lib/types";
+import type { UserRole } from "@/lib/types";
 
-export const USER_ROLES: UserRole[] = ["admin", "teacher", "student"];
+export const USER_ROLES: UserRole[] = ["admin", "teacher", "student", "parent"];
 
 export function isUserRole(value: string): value is UserRole {
   return USER_ROLES.includes(value as UserRole);

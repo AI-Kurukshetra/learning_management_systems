@@ -5,7 +5,18 @@ export const courseModulesSchemaMismatchMessage =
   "Supabase course workflow tables are outdated. Run supabase/eduflow-schema.sql in the Supabase SQL Editor, then reopen this course.";
 
 export function isAuthSessionMissingError(message?: string) {
-  return message === "Auth session missing!";
+  if (!message) {
+    return false;
+  }
+
+  const normalizedMessage = message.toLowerCase();
+
+  return (
+    normalizedMessage === "auth session missing!" ||
+    normalizedMessage.includes("refresh token not found") ||
+    normalizedMessage.includes("invalid refresh token") ||
+    normalizedMessage.includes("refresh_token_not_found")
+  );
 }
 
 export function isAuthSchemaMismatchError(message?: string) {

@@ -1,7 +1,7 @@
-﻿import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { authSchemaMismatchMessage, isAuthSchemaMismatchError } from "@/lib/auth-errors";
+import { authSchemaMismatchMessage, isAuthSchemaMismatchError, isAuthSessionMissingError } from "@/lib/auth-errors";
 import { canAccessPath, getDashboardPath, resolveAuthorizedRedirect } from "@/lib/roles";
 import type { UserRole } from "@/lib/types";
 
@@ -9,7 +9,7 @@ const publicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_U
 const publicAnon =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const protectedPrefixes = ["/admin", "/teacher", "/student"];
+const protectedPrefixes = ["/admin", "/teacher", "/student", "/parent"];
 const missingProfileMessage = "Invalid email or password combination.";
 
 async function getUserRole(authUserId: string, email?: string | null) {
@@ -113,7 +113,23 @@ export async function middleware(request: NextRequest) {
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
+
+  if (userError && isAuthSessionMissingError(userError.message)) {
+    if (isProtectedRoute) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirectTo", `${pathname}${search}`);
+
+      return NextResponse.redirect(loginUrl);
+    }
+
+    return response;
+  }
+
+  if (userError) {
+    throw userError;
+  }
 
   if (!user) {
     if (isProtectedRoute) {
@@ -168,5 +184,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/admin/:path*", "/teacher/:path*", "/student/:path*"],
+  matcher: ["/", "/login", "/admin/:path*", "/teacher/:path*", "/student/:path*", "/parent/:path*"],
 };
+

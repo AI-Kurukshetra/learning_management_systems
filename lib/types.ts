@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "teacher" | "student";
+export type UserRole = "admin" | "teacher" | "student" | "parent";
 export type CourseModuleType = "lesson" | "video" | "assignment" | "quiz" | "resource";
 export type CurriculumTag = "Math" | "Science" | "History" | "Programming" | "Language";
 export type CalendarEventType = "assignment" | "event" | "exam";
@@ -262,4 +262,68 @@ export interface EnrollmentListItem {
   studentId: string;
   studentName: string;
   studentEmail: string;
+}
+export interface ParentCourseItem {
+  id: string;
+  title: string;
+  teacherId: string;
+  teacherName: string;
+  teacherEmail: string;
+}
+
+export interface ParentAssignmentItem {
+  id: string;
+  title: string;
+  courseName: string;
+  dueDate: string;
+}
+
+export interface ParentGradeItem {
+  id: string;
+  assignmentTitle: string;
+  courseName: string;
+  dueDate: string;
+  grade: number | null;
+  feedback: string | null;
+  submittedAt: string | null;
+}
+
+export interface ParentAttendanceItem {
+  id: string;
+  date: string;
+  course: string;
+  status: AttendanceStatus;
+}
+
+export interface ParentTeacherContact {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface ParentMessageItem {
+  id: string;
+  parentId: string;
+  teacherId: string;
+  teacherName: string;
+  teacherEmail: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface ParentChildLinkItem {
+  parentId: string;
+  parentName: string;
+  parentEmail: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  linkedAt: string;
+}
+
+export interface ParentChildOverview {
+  child: AppUser | null;
+  courseCount: number;
+  totalAssignments: number;
+  averageGrade: number | null;
 }
