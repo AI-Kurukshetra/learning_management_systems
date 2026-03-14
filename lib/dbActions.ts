@@ -110,11 +110,16 @@ async function getUsersMap(ids: string[]) {
   return new Map((data as AppUser[]).map((user) => [user.id, user]));
 }
 
+type ModuleCountRow = {
+  course_id: string;
+};
+
 function mapCourses(
   courseRows: CourseRow[],
   userMap: Map<string, AppUser>,
   enrollments: EnrollmentRow[],
   assignments: AssignmentRow[],
+  moduleCounts: ModuleCountRow[] = [],
 ) {
   return courseRows.map<CourseListItem>((course) => {
     const teacher = userMap.get(course.teacher_id);
@@ -128,6 +133,7 @@ function mapCourses(
       createdAt: course.created_at,
       studentCount: enrollments.filter((item) => item.course_id === course.id).length,
       assignmentCount: assignments.filter((item) => item.course_id === course.id).length,
+      moduleCount: moduleCounts.filter((item) => item.course_id === course.id).length,
     };
   });
 }
@@ -252,7 +258,7 @@ export async function getCourses(viewer?: Viewer) {
   const courseIds = courseRows.map((course) => course.id);
   const teacherIds = [...new Set(courseRows.map((course) => course.teacher_id))];
 
-  const [teacherMap, enrollmentResult, assignmentResult] = await Promise.all([
+  const [teacherMap, enrollmentResult, assignmentResult, moduleCountResult] = await Promise.all([
     getUsersMap(teacherIds),
     courseIds.length > 0
       ? supabase
@@ -266,6 +272,12 @@ export async function getCourses(viewer?: Viewer) {
           .select("id,course_id,title,description,due_date,created_at")
           .in("course_id", courseIds)
       : Promise.resolve({ data: [], error: null }),
+    courseIds.length > 0
+      ? supabase
+          .from("course_modules")
+          .select("course_id")
+          .in("course_id", courseIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   if (enrollmentResult.error) {
@@ -276,11 +288,18 @@ export async function getCourses(viewer?: Viewer) {
     throw new Error(assignmentResult.error.message);
   }
 
+  const moduleCounts = moduleCountResult.error && moduleCountResult.error.message.includes("course_modules")
+    ? []
+    : moduleCountResult.error
+      ? (() => { throw new Error(moduleCountResult.error.message); })()
+      : ((moduleCountResult.data ?? []) as ModuleCountRow[]);
+
   return mapCourses(
     courseRows,
     teacherMap,
     (enrollmentResult.data ?? []) as EnrollmentRow[],
     (assignmentResult.data ?? []) as AssignmentRow[],
+    moduleCounts,
   );
 }
 
@@ -375,6 +394,7 @@ export async function getCourseById(courseId: string, viewer?: Viewer): Promise<
       .filter((student): student is AppUser => Boolean(student))
       .sort((left, right) => left.name.localeCompare(right.name)),
     assignments,
+    modules: [],
   };
 }
 
@@ -1194,6 +1214,8 @@ export async function generateAiFeedback(formData: FormData) {
   revalidateProtectedApp();
   redirect(redirectPath);
 }
+
+
 
 
 

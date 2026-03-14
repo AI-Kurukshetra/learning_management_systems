@@ -20,3 +20,43 @@
 - Added duplicate-email protection for teacher and student creation.
 - Reset teacher/student create forms after successful submission.
 - Removed leaked Supabase keys from git history and sanitized the tracked env example file.
+- Added `course_modules` schema support with module types, curriculum tags, positions, and update timestamps.
+- Added admin course builder server actions for module CRUD, template application, and drag-and-drop reordering.
+- Added reusable `CourseBuilder`, `ModuleCard`, `AddModuleModal`, and `TemplateSelector` components.
+- Added `/admin/courses/[courseId]` as the dedicated admin course-builder route.
+- Integrated a builder entry point into the existing admin courses module.
+- Added graceful fallback messaging when the `course_modules` table is missing in Supabase.
+- Scoped template loading state to the selected template button only.
+- Added template selection during admin course creation.
+- Added safe template application during course creation with rollback if curriculum module creation fails.
+- Added lesson completion fields and `course_module_tasks` schema support.
+- Added teacher-side lesson task actions and lesson completion actions.
+- Added a teacher lesson board to the teacher course detail page.
+- Added graceful fallback messaging for teacher lesson modules when the course-module schema is outdated.
+- Removed assignment-first teacher and student navigation/workflow from the UI.
+- Added due dates for lesson tasks and exposed them in teacher and student course views.
+- Added `course_grades` schema support for per-student course grades and comments.
+- Added teacher course-level grading and comments per student.
+- Added student course-level grade/comment display.
+- Redirected legacy assignment routes back to course workspaces.
+- Updated dashboards, course cards, login copy, and admin course screens to reflect the lesson-task workflow.
+- Verified the lesson-task and course-grading changes with `npm run build`.
+
+- Fixed the teacher lesson-task due-date picker with date-only storage.
+- Updated student lesson-task due dates to render in `dd-mm-yyyy` format.
+- Added a shared course discussion forum for teachers and students on every course page.
+- Added `course_messages` schema support and shared forum server actions.
+- Verified the course-forum and due-date changes with `npm run build`.
+## Added In Scope
+
+- Extend admin course management with a visual course builder.
+- Add reusable course builder UI components and drag-and-drop module ordering.
+- Add course templates and curriculum-tag mapping for course modules.
+- Add Supabase schema and CRUD support for `course_modules`.
+- Add template selection during admin course creation.
+- Add teacher lesson task management and lesson completion controls.
+- Remove assignment-first teacher/student workflow in favor of lesson-task delivery.
+- Add due dates for lesson tasks and expose them in the student portal.
+- Add teacher course-level grading and comments per student.
+- Fix the teacher due-date picker for lesson tasks.
+- Add a course-wise forum shared by teachers and students.

@@ -29,8 +29,8 @@ export default async function LoginPage({
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             {[
               { label: "Admin", text: "Manage users, courses, and enrollments." },
-              { label: "Teacher", text: "Create assignments and grade submissions." },
-              { label: "Student", text: "View courses, submit work, and see grades." },
+              { label: "Teacher", text: "Build lesson flow, assign due-dated tasks, and grade each student by course." },
+              { label: "Student", text: "View lesson tasks, follow due dates, and read course grades and comments." },
             ].map((item) => (
               <div key={item.label} className="rounded-3xl border border-white/10 bg-white/5 p-5">
                 <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">{item.label}</p>

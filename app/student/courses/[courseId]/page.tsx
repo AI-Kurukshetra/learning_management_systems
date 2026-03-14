@@ -1,9 +1,16 @@
-﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { AssignmentCard } from "@/components/AssignmentCard";
+import { CourseForum } from "@/components/CourseForum";
 import { StudentList } from "@/components/StudentList";
+import { StudentLessonBoard } from "@/components/student/StudentLessonBoard";
+import {
+  courseModulesSchemaMismatchMessage,
+  isCourseModulesSchemaMismatchError,
+} from "@/lib/auth-errors";
+import { getCourseForumMessages, postCourseMessage } from "@/lib/course-forum-actions";
 import { getCourseById, getCurrentViewer } from "@/lib/dbActions";
+import { getStudentCourseGrade, getStudentCourseModules } from "@/lib/student-course-actions";
+import type { CourseForumMessageItem, CourseModuleItem, CourseStudentGradeItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -19,13 +26,32 @@ export default async function StudentCourseDetailPage({
     notFound();
   }
 
+  let modules: CourseModuleItem[] = [];
+  let courseGrade: CourseStudentGradeItem | null = null;
+  let forumMessages: CourseForumMessageItem[] = [];
+  let schemaMessage: string | null = null;
+
+  try {
+    [modules, courseGrade, forumMessages] = await Promise.all([
+      getStudentCourseModules(params.courseId),
+      getStudentCourseGrade(params.courseId),
+      getCourseForumMessages(params.courseId),
+    ]);
+  } catch (error) {
+    if (error instanceof Error && isCourseModulesSchemaMismatchError(error.message)) {
+      schemaMessage = courseModulesSchemaMismatchMessage;
+    } else {
+      throw error;
+    }
+  }
+
   return (
     <AppShell
       title={detail.course.title}
-      description={`Instructor ${detail.course.teacherName} · ${detail.course.studentCount} students · ${detail.course.assignmentCount} assignments`}
+      description={`Instructor ${detail.course.teacherName} | ${detail.course.studentCount} students`}
       viewer={viewer}
     >
-      <div className="grid gap-8 xl:grid-cols-[0.9fr,1.1fr]">
+      <div className="space-y-8">
         <StudentList
           students={detail.students}
           studentOptions={[]}
@@ -33,28 +59,23 @@ export default async function StudentCourseDetailPage({
           redirectPath={`/student/courses/${detail.course.id}`}
           canManage={false}
         />
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">Assignments</h2>
-            <Link href="/student/assignments" className="text-sm text-cyan-300">
-              View all assignments
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {detail.assignments.map((assignment) => (
-              <AssignmentCard
-                key={assignment.id}
-                assignment={assignment}
-                href={`/student/assignments/${assignment.id}`}
-              />
-            ))}
-            {detail.assignments.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-6 text-sm text-slate-400">
-                No assignments have been created for this course yet.
-              </div>
-            ) : null}
-          </div>
-        </section>
+
+        {schemaMessage ? (
+          <section className="rounded-3xl border border-amber-400/20 bg-amber-500/10 p-6 text-amber-50">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-amber-200">Course workflow unavailable</p>
+            <p className="mt-3 text-base">{schemaMessage}</p>
+          </section>
+        ) : (
+          <>
+            <StudentLessonBoard modules={modules} courseGrade={courseGrade} />
+            <CourseForum
+              courseId={detail.course.id}
+              currentUser={viewer.currentUser}
+              messages={forumMessages}
+              postMessageAction={postCourseMessage}
+            />
+          </>
+        )}
       </div>
     </AppShell>
   );

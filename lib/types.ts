@@ -1,4 +1,6 @@
 ﻿export type UserRole = "admin" | "teacher" | "student";
+export type CourseModuleType = "lesson" | "video" | "assignment" | "quiz" | "resource";
+export type CurriculumTag = "Math" | "Science" | "History" | "Programming" | "Language";
 
 export interface AppUser {
   id: string;
@@ -25,6 +27,53 @@ export interface CourseListItem {
   createdAt: string;
   studentCount: number;
   assignmentCount: number;
+  moduleCount?: number;
+}
+
+export interface CourseModuleTaskItem {
+  id: string;
+  moduleId: string;
+  title: string;
+  dueDate: string | null;
+  isCompleted: boolean;
+  position: number;
+  createdAt: string;
+}
+
+export interface CourseModuleItem {
+  id: string;
+  courseId: string;
+  title: string;
+  description: string;
+  content: string;
+  curriculumTag: CurriculumTag | null;
+  moduleType: CourseModuleType;
+  position: number;
+  isCompleted: boolean;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  tasks: CourseModuleTaskItem[];
+}
+
+export interface CourseStudentGradeItem {
+  id: string;
+  courseId: string;
+  studentId: string;
+  grade: number | null;
+  comments: string | null;
+  updatedAt: string;
+}
+
+export interface CourseForumMessageItem {
+  id: string;
+  courseId: string;
+  senderId: string;
+  senderName: string;
+  senderEmail: string;
+  senderRole: UserRole;
+  body: string;
+  createdAt: string;
 }
 
 export interface SubmissionItem {
@@ -56,6 +105,7 @@ export interface CourseDetail {
   course: CourseListItem;
   students: AppUser[];
   assignments: AssignmentListItem[];
+  modules: CourseModuleItem[];
 }
 
 export interface AssignmentDetail {
@@ -77,4 +127,3 @@ export interface EnrollmentListItem {
   studentName: string;
   studentEmail: string;
 }
-

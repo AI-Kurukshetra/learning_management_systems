@@ -1,5 +1,4 @@
 ﻿import { redirect } from "next/navigation";
-import { buildRolePath } from "@/lib/roles";
 import { getCurrentViewer } from "@/lib/dbActions";
 
 export const dynamic = "force-dynamic";
@@ -11,5 +10,5 @@ export default async function LegacyAssignmentsPage() {
     redirect("/admin/dashboard");
   }
 
-  redirect(buildRolePath(viewer.role, "/assignments"));
+  redirect(`/${viewer.role}/courses`);
 }

@@ -1,4 +1,4 @@
-﻿create extension if not exists "pgcrypto";
+create extension if not exists "pgcrypto";
 
 create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),
@@ -79,9 +79,98 @@ create table if not exists public.submissions (
   unique (assignment_id, student_id)
 );
 
+create table if not exists public.course_modules (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses(id) on delete cascade,
+  title text not null,
+  description text not null default '',
+  content text not null default '',
+  curriculum_tag text,
+  module_type text not null,
+  position integer not null,
+  is_completed boolean not null default false,
+  completed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint course_modules_module_type_check check (module_type in ('lesson', 'video', 'assignment', 'quiz', 'resource')),
+  constraint course_modules_curriculum_tag_check check (curriculum_tag is null or curriculum_tag in ('Math', 'Science', 'History', 'Programming', 'Language')),
+  constraint course_modules_position_check check (position >= 0)
+);
+
+alter table public.course_modules
+  add column if not exists is_completed boolean not null default false,
+  add column if not exists completed_at timestamptz;
+
+create table if not exists public.course_module_tasks (
+  id uuid primary key default gen_random_uuid(),
+  module_id uuid not null references public.course_modules(id) on delete cascade,
+  title text not null,
+  due_date timestamptz,
+  is_completed boolean not null default false,
+  position integer not null,
+  created_at timestamptz not null default now(),
+  constraint course_module_tasks_position_check check (position >= 0)
+);
+
+alter table public.course_module_tasks
+  add column if not exists due_date timestamptz;
+
+create table if not exists public.course_grades (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses(id) on delete cascade,
+  student_id uuid not null references public.users(id) on delete cascade,
+  grade integer,
+  comments text,
+  updated_at timestamptz not null default now(),
+  unique (course_id, student_id)
+);
+
+create table if not exists public.course_messages (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses(id) on delete cascade,
+  sender_id uuid not null references public.users(id) on delete cascade,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_courses_teacher_id on public.courses(teacher_id);
 create index if not exists idx_enrollments_course_id on public.enrollments(course_id);
 create index if not exists idx_enrollments_student_id on public.enrollments(student_id);
 create index if not exists idx_assignments_course_id on public.assignments(course_id);
 create index if not exists idx_submissions_assignment_id on public.submissions(assignment_id);
 create index if not exists idx_submissions_student_id on public.submissions(student_id);
+create index if not exists idx_course_modules_course_id_position on public.course_modules(course_id, position);
+create index if not exists idx_course_modules_module_type on public.course_modules(module_type);
+create index if not exists idx_course_modules_curriculum_tag on public.course_modules(curriculum_tag);
+create index if not exists idx_course_module_tasks_module_id_position on public.course_module_tasks(module_id, position);
+create index if not exists idx_course_grades_course_student on public.course_grades(course_id, student_id);
+create index if not exists idx_course_messages_course_created_at on public.course_messages(course_id, created_at);
+create index if not exists idx_course_messages_sender_id on public.course_messages(sender_id);
+
+create or replace function public.set_course_module_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create or replace function public.set_course_grade_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists trg_course_modules_updated_at on public.course_modules;
+create trigger trg_course_modules_updated_at
+before update on public.course_modules
+for each row
+execute function public.set_course_module_updated_at();
+
+drop trigger if exists trg_course_grades_updated_at on public.course_grades;
+create trigger trg_course_grades_updated_at
+before update on public.course_grades
+for each row
+execute function public.set_course_grade_updated_at();

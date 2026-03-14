@@ -39,11 +39,18 @@ EduFlow is a role-based learning management system built with Next.js and Supaba
 - Teachers module
 - Students module
 - Courses module
+- Course builder inside admin course management
+- Template selection during course creation
+- Course templates for Math, Science, and Custom setups
+- Drag-and-drop curriculum module ordering
+- Course module CRUD for lessons, videos, quizzes, and resources
+- Curriculum tagging for course modules
 - Enrollments module
 - Search in each admin listing
 - CRUD for teachers
 - CRUD for students
 - Create/update/delete for courses
+- Create/update/delete/reorder for course modules
 - Enrollment management with course assignment, teacher assignment, and multi-student enrollment
 - Pending/loading state for admin action forms
 - Duplicate-email prevention for teacher/student creation
@@ -52,21 +59,29 @@ EduFlow is a role-based learning management system built with Next.js and Supaba
 ### Teacher Module
 - Teacher dashboard
 - View assigned courses
-- Course detail view with roster and assignments
-- Create assignments
-- View submissions
-- Grade submissions
-- Generate AI-style feedback suggestions
+- Course detail view with roster, lesson modules, and course grading
+- View course curriculum modules
+- Add lesson tasks for lesson modules
+- Add due dates to lesson tasks
+- Use a working date picker for lesson task due dates
+- Mark lessons as completed
+- Grade students per course
+- Add comments per student for a course
+- Use a course-wise discussion forum shared with students
 
 ### Student Module
 - Student dashboard
 - View enrolled courses
-- View assignments
-- Submit assignments
-- View grades and feedback
+- View lesson tasks and due dates inside courses
+- View lesson task due dates in `dd-mm-yyyy` format
+- View course grades and teacher comments
+- Use a course-wise discussion forum shared with teachers
 
 ### Data and Schema
 - Supabase schema migration for auth-linked `users` records
+- Course module lesson-task support, due dates, and lesson completion tracking
+- Course-level student grading and comments
+- Course-level teacher/student discussion forum
 - Demo account seed script for admin, teacher, and student users
 
 ## Primary Routes
@@ -80,21 +95,18 @@ EduFlow is a role-based learning management system built with Next.js and Supaba
 - `/admin/teachers`
 - `/admin/students`
 - `/admin/courses`
+- `/admin/courses/[courseId]`
 - `/admin/enrollments`
 
 ### Teacher
 - `/teacher/dashboard`
 - `/teacher/courses`
 - `/teacher/courses/[courseId]`
-- `/teacher/assignments`
-- `/teacher/assignments/[assignmentId]`
 
 ### Student
 - `/student/dashboard`
 - `/student/courses`
 - `/student/courses/[courseId]`
-- `/student/assignments`
-- `/student/assignments/[assignmentId]`
 
 ## Non-Functional Requirements
 - Use TypeScript throughout the app
@@ -102,3 +114,4 @@ EduFlow is a role-based learning management system built with Next.js and Supaba
 - Keep server actions and auth rules enforced on the server
 - Avoid trust in client-provided role or user identity
 - Keep admin workflows responsive with disabled submit states during mutations
+
